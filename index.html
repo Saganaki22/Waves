@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Interference :: Interactive Visualization</title>
+    <meta name="description" content="Explore the science and beauty of wave interference with this interactive, modern web toy. Learn, play, and visualize real physics!">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" sizes="16x16" href="favicon.svg">
+    <link rel="manifest" href="favicon/webmanifest.json">
+    <link rel="shortcut icon" href="favicon.svg">
+    <meta property="og:title" content="Wave Interference :: Interactive Visualization">
+    <meta property="og:description" content="Explore the science and beauty of wave interference with this interactive, modern web toy. Learn, play, and visualize real physics!">
+    <meta property="og:image" content="https://i.ibb.co/KjWSGYzY/og-img.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://drbaph.is-a.dev/Waves/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Wave Interference :: Interactive Visualization">
+    <meta name="twitter:description" content="Explore the science and beauty of wave interference with this interactive, modern web toy. Learn, play, and visualize real physics!">
+    <meta name="twitter:image" content="https://i.ibb.co/KjWSGYzY/og-img.jpg">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body, button, a, .pattern-card, .control-button, .back-button, .about-footer-link {
+            -webkit-tap-highlight-color: transparent !important;
+            user-select: none;
+            outline: none;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-hover: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --transition-duration: 350ms;
+            --easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Grid View Styles */
+        .grid-container {
+            width: 100%;
+            display: block;
+            padding: 24px 1rem 0 1rem;
+            box-sizing: border-box;
+            transition: opacity var(--transition-duration) var(--easing);
+        }
+
+        .grid-container.hidden {
+            display: none;
+        }
+
+        .grid-view {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: 1fr;
+            gap: clamp(0.5rem, 2vw, 2rem);
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            z-index: 1;
+        }
+
+        @media (max-width: 900px) {
+            .grid-view {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 600px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .grid-view {
+                grid-template-columns: 1fr;
+                max-width: 320px;
+            }
+            .title {
+                font-size: 1.1rem;
+                margin-top: 1.2rem;
+                margin-bottom: 1.2rem;
+            }
+        }
+
+        .pattern-card {
+            aspect-ratio: 1/1;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: all var(--transition-duration) var(--easing);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            width: 100%;
+            height: auto;
+            z-index: 2;
+            padding: 0;
+        }
+
+        .pattern-card:hover {
+            background: var(--glass-hover);
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .pattern-card.selected {
+            transform: scale(10);
+            opacity: 0;
+        }
+
+        .pattern-number {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-primary);
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1;
+        }
+
+        .pattern-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            image-rendering: smooth;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        /* Fullscreen View Styles */
+        .fullscreen-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-duration) var(--easing);
+        }
+
+        .fullscreen-view.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #mainCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            width: 3rem;
+            height: 3rem;
+            background: rgba(20, 22, 30, 0.85);
+            border: 1.5px solid rgba(255,255,255,0.13);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 180ms, border 180ms, box-shadow 180ms;
+            box-shadow: 0 4px 18px 0 rgba(0,0,0,0.28);
+            z-index: 200;
+            padding: 0;
+            font-size: 1.7rem;
+            color: #fff;
+            outline: none;
+        }
+
+        .back-button:hover, .back-button:active, .back-button:focus {
+            background: rgba(40, 44, 60, 0.95);
+            border-color: #ffd166;
+            color: #ffd166;
+        }
+
+        .back-button i {
+            font-size: 1.7rem;
+            color: #222;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(calc(100% - 60px));
+            width: 90%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: transform 300ms var(--easing);
+        }
+
+        .control-panel.open {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .control-handle {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .control-label i {
+            font-size: 1rem;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+            transition: background 200ms ease;
+        }
+
+        .slider:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: all 200ms ease;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .control-button {
+            flex: 1;
+            padding: 1rem 1.2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 200ms ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .control-button i {
+            font-size: 1.2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .grid-container {
+                padding: 0 0.5rem;
+            }
+
+            .grid-view {
+                gap: 0.5rem;
+                max-width: 100%;
+            }
+
+            .pattern-number {
+                width: 1.75rem;
+                height: 1.75rem;
+                font-size: 0.75rem;
+                top: 0.5rem;
+                left: 0.5rem;
+            }
+
+            .title {
+                font-size: 1.2rem;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .footer {
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+
+            .back-button, .about-footer-link, .control-button, .pattern-card {
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 1.1rem;
+            }
+            .about-footer-link, .control-button {
+                padding: 0.7rem 0.8rem;
+            }
+        }
+
+        @media (min-width: 601px) and (max-width: 900px) {
+            .grid-view {
+                gap: 1rem;
+            }
+        }
+
+        @media (min-width: 901px) and (max-width: 1200px) {
+            .grid-view {
+                gap: 1.5rem;
+            }
+        }
+
+        @media (min-width: 1201px) {
+            .grid-view {
+                gap: 2rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            z-index: 10;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-duration) var(--easing);
+        }
+
+        .footer-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 200ms ease;
+            opacity: 0.8;
+        }
+
+        .footer-link:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .footer-link i {
+            font-size: 1.2rem;
+        }
+
+        /* About Page Styles */
+        .about-page {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #181c2a 0%, #232946 100%);
+            color: #fff;
+            z-index: 100;
+            overflow-y: auto;
+            padding: 0;
+            animation: fadeIn 0.5s;
+        }
+        .about-page.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .about-content {
+            max-width: 700px;
+            margin: 4rem auto 2rem auto;
+            background: rgba(30,34,60,0.85);
+            border-radius: 2rem;
+            padding: 2.5rem 2rem 2rem 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+        }
+        .about-title {
+            font-family: 'Montserrat', 'Inter', Arial, sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            text-align: center;
+            color: #ffd166;
+        }
+        .about-section {
+            margin-bottom: 1.5rem;
+        }
+        .about-section h2 {
+            font-size: 1.2rem;
+            color: #8ecae6;
+            margin-bottom: 0.5rem;
+        }
+        .about-section p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #fff;
+        }
+        .about-footer {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .about-footer-link {
+            color: #ffd166;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+            padding: 0.75rem 1.2rem;
+            border-radius: 12px;
+        }
+        .about-footer-link:hover {
+            color: #fff;
+        }
+        .about-back {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: #fff;
+            color: #232946;
+            border: 2px solid #232946;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.7rem;
+            z-index: 201;
+        }
+        .about-back:hover {
+            background: #ffd166;
+            color: #232946;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .title {
+            font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
+            font-weight: 400;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            line-height: 1.1;
+            text-align: left;
+            margin: 0 auto 2.5rem auto;
+            display: block;
+            width: max-content;
+            padding-left: 0.1em;
+            opacity: 0.95;
+        }
+        .title-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-wrapper">
+        <h1 class="title" id="mainTitle">WAVE<br>INTERFERENCE</h1>
+    </div>
+    
+    <!-- About Page -->
+    <div class="about-page" id="aboutPage">
+        <button class="back-button" onclick="app.hideAboutPage()" title="Back to Home">&#8592;</button>
+        <div class="about-content">
+            <div class="about-title">About Wave Interference</div>
+            <div class="about-section">
+                <p>Ever wondered why noise-cancelling headphones can block out the world or why peacock feathers shimmer with color? It's all thanks to a fascinating phenomenon called wave interference. This happens when waves—like sound, light, or water ripples—meet and mix, creating something entirely new. Let's break it down step by step and explore how it shapes both nature and technology in ways you'll recognize every day!</p>
+            </div>
+            <div class="about-section">
+                <h2>What is Wave Interference?</h2>
+                <p>Wave interference is what happens when two or more waves overlap in the same space at the same time. When they combine, they form a new wave pattern with some pretty cool effects:</p>
+                <ul style="margin-left:1.2em;">
+                    <li><b>Constructive Interference:</b> Picture two friends pushing a swing together in perfect sync—the swing goes higher! When the peaks (or crests) of two waves line up, they add together to make a bigger wave.</li>
+                    <li><b>Destructive Interference:</b> Now imagine one friend pushing while the other pulls—the swing barely moves. When a peak meets a valley (or trough), the waves cancel each other out, leaving a smaller wave or even nothing at all.</li>
+                </ul>
+                <p>This happens with all kinds of waves: the sound waves you hear, the light waves you see, and the water waves you spot in a puddle. It's a universal wave behavior that's quietly at work all around us.</p>
+            </div>
+            <div class="about-section">
+                <h2>The Physics Behind It: A Simple Explanation</h2>
+                <p>So, why do waves act this way? It's all thanks to a rule called the principle of superposition. This just means that when waves meet, their heights (or amplitudes) add up. Here's how it plays out:</p>
+                <ul style="margin-left:1.2em;">
+                    <li>If two waves are in sync (their peaks and valleys match), they team up to create a taller wave. That's constructive interference.</li>
+                    <li>If they're out of sync (a peak hits a valley), they cancel each other out. That's destructive interference.</li>
+                </ul>
+                <p>Think of it like a tug-of-war: when everyone pulls in the same direction, you get a big win. When they pull against each other, nothing moves. Waves follow the same idea, and this simple principle explains some amazing things we'll see next.</p>
+            </div>
+            <div class="about-section">
+                <h2>Real-World Applications: Wave Interference in Action</h2>
+                <p>Wave interference isn't just a science lab trick—it's behind some of the coolest stuff in our world. Check out these examples:</p>
+                <ul style="margin-left:1.2em;">
+                    <li><b>Noise-Cancelling Headphones:</b> These use destructive interference to zap unwanted noise. They make a sound wave that's perfectly out of sync with the background racket, canceling it out so you hear silence or just your tunes.</li>
+                    <li><b>Holography:</b> Those mind-blowing 3D holograms? They're created by capturing how light waves interfere with each other, turning flat patterns into images that pop off the page.</li>
+                    <li><b>Nature's Colors:</b> The dazzling shimmer of butterfly wings, peacock feathers, and soap bubbles comes from light waves interfering. The way they overlap creates those shifting, iridescent hues.</li>
+                    <li><b>Medical Imaging:</b> MRI and ultrasound machines use wave interference to peek inside your body, building detailed pictures that help doctors figure out what's going on.</li>
+                    <li><b>The Internet:</b> Fiber optic cables carry light waves across the globe, and interference helps pack tons of data into those tiny beams, keeping us online at lightning speed.</li>
+                </ul>
+                <p>You can even spot interference in daily life—like the "wobbling" beats when two musical notes are slightly off, or the ripple patterns when you toss two pebbles into a pond.</p>
+            </div>
+            <div class="about-section">
+                <h2>Why It Matters</h2>
+                <p>Wave interference is more than a neat idea—it's a key to understanding how waves shape our lives. From high-tech gadgets to the beauty of nature, it's the invisible teamwork (or tug-of-war) of waves that makes it all possible. Next time you enjoy quiet headphones or marvel at a rainbow in a bubble, you'll know it's wave interference stealing the show!</p>
+            </div>
+        </div>
+        <div class="about-footer">
+            <a href="#" class="about-footer-link" onclick="app.hideAboutPage()"><i class="ph-house"></i> Home</a>
+            <a href="https://github.com/Saganaki22/Waves" class="about-footer-link" target="_blank" rel="noopener noreferrer"><i class="ph-github-logo"></i> GitHub</a>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div class="grid-container" id="gridContainer">
+        <div class="grid-view" id="gridView">
+            <!-- Pattern cards will be generated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Fullscreen View -->
+    <div class="fullscreen-view" id="fullscreenView">
+        <canvas id="mainCanvas"></canvas>
+        
+        <button class="back-button" onclick="app.returnToGrid()">&#8592;</button>
+
+        <div class="control-panel" id="controlPanel">
+            <div class="control-handle" onclick="app.toggleControls()" title="Click to open controls"></div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">
+                        <i class="ph-gauge"></i>
+                        Speed: <span id="speedValue" style="color: #ffffff;">1.0</span>x
+                    </label>
+                    <input type="range" class="slider" id="speedSlider" min="0.1" max="3" step="0.1" value="1">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <i class="ph-wave-sine"></i>
+                        Frequency: <span id="frequencyValue" style="color: #ffffff;">1.0</span>
+                    </label>
+                    <input type="range" class="slider" id="frequencySlider" min="0.5" max="3" step="0.1" value="1">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <i class="ph-arrows-vertical"></i>
+                        Amplitude: <span id="amplitudeValue" style="color: #ffffff;">1.0</span>
+                    </label>
+                    <input type="range" class="slider" id="amplitudeSlider" min="0.1" max="2" step="0.1" value="1">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="control-button" onclick="app.toggleAnimation()">
+                    <i class="ph-play" id="playPauseIcon"></i>
+                    <span id="playPauseText">Pause</span>
+                </button>
+                <button class="control-button" onclick="app.resetSettings()">
+                    <i class="ph-arrow-counter-clockwise"></i>
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+        <a href="#about" class="footer-link" onclick="event.preventDefault(); app.showAboutPage()">
+            <i class="ph-info"></i>
+            About
+        </a>
+        <a href="https://github.com/Saganaki22/Waves" class="footer-link" target="_blank" rel="noopener noreferrer">
+            <i class="ph-github-logo"></i>
+            GitHub
+        </a>
+    </footer>
+
+    <script>
+        class WaveInterferenceToy {
+            constructor() {
+                this.state = {
+                    currentView: 'grid',
+                    selectedPattern: null,
+                    isPlaying: true,
+                    controlsOpen: false,
+                    settings: {
+                        speed: 1.0,
+                        frequency: 1.0,
+                        amplitude: 1.0
+                    }
+                };
+
+                this.patterns = [
+                    { sources: 1, arrangement: 'center' },
+                    { sources: 2, arrangement: 'horizontal' },
+                    { sources: 3, arrangement: 'triangle' },
+                    { sources: 4, arrangement: 'square' },
+                    { sources: 5, arrangement: 'pentagon' },
+                    { sources: 6, arrangement: 'hexagon' },
+                    { sources: 7, arrangement: 'heptagon' },
+                    { sources: 8, arrangement: 'octagon' },
+                    { sources: 5, arrangement: 'random' }  // Spiral pattern
+                ];
+
+                this.thumbnailAnimations = [];
+                this.mainAnimation = null;
+                this.time = 0;
+                
+                this.init();
+            }
+
+            init() {
+                this.createPatternCards();
+                this.setupEventListeners();
+                this.setupMainCanvas();
+                this.startAnimations();
+            }
+
+            createPatternCards() {
+                const gridView = document.getElementById('gridView');
+                
+                this.patterns.forEach((pattern, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'pattern-card';
+                    card.dataset.pattern = index + 1;
+                    card.onclick = () => this.selectPattern(index + 1);
+                    
+                    const number = document.createElement('div');
+                    number.className = 'pattern-number';
+                    number.textContent = index + 1;
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'pattern-canvas';
+                    canvas.width = 200;
+                    canvas.height = 200;
+                    
+                    card.appendChild(number);
+                    card.appendChild(canvas);
+                    gridView.appendChild(card);
+                    
+                    this.thumbnailAnimations.push({
+                        canvas,
+                        ctx: canvas.getContext('2d'),
+                        pattern: pattern
+                    });
+                });
+            }
+
+            setupMainCanvas() {
+                const canvas = document.getElementById('mainCanvas');
+                const resizeCanvas = () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                };
+                
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                
+                this.mainCanvas = canvas;
+                this.mainCtx = canvas.getContext('2d');
+            }
+
+            setupEventListeners() {
+                // Sliders
+                const sliders = [
+                    { id: 'speedSlider', prop: 'speed', display: 'speedValue' },
+                    { id: 'frequencySlider', prop: 'frequency', display: 'frequencyValue' },
+                    { id: 'amplitudeSlider', prop: 'amplitude', display: 'amplitudeValue' }
+                ];
+
+                sliders.forEach(slider => {
+                    const element = document.getElementById(slider.id);
+                    element.addEventListener('input', (e) => {
+                        const value = parseFloat(e.target.value);
+                        this.state.settings[slider.prop] = value;
+                        document.getElementById(slider.display).textContent = value.toFixed(1);
+                    });
+                });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.state.currentView === 'fullscreen') {
+                        this.returnToGrid();
+                    }
+                });
+
+                // Browser back button
+                window.addEventListener('popstate', (e) => {
+                    if (this.state.currentView === 'fullscreen') {
+                        this.returnToGrid();
+                    }
+                });
+            }
+
+            selectPattern(patternNumber) {
+                this.state.selectedPattern = patternNumber;
+                this.state.currentView = 'fullscreen';
+                
+                // Animate transition
+                const card = document.querySelector(`[data-pattern="${patternNumber}"]`);
+                card.classList.add('selected');
+                
+                // Hide title and footer
+                document.getElementById('mainTitle').style.opacity = '0';
+                document.getElementById('footer').classList.add('hidden');
+                
+                setTimeout(() => {
+                    document.getElementById('gridContainer').classList.add('hidden');
+                    document.getElementById('fullscreenView').classList.add('active');
+                    history.pushState({ pattern: patternNumber }, '', `#pattern-${patternNumber}`);
+                }, 100);
+            }
+
+            returnToGrid() {
+                this.state.currentView = 'grid';
+                
+                document.getElementById('fullscreenView').classList.remove('active');
+                document.getElementById('gridContainer').classList.remove('hidden');
+                
+                // Show title and footer
+                document.getElementById('mainTitle').style.opacity = '0.9';
+                document.getElementById('footer').classList.remove('hidden');
+                
+                // Reset card animation
+                document.querySelectorAll('.pattern-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                
+                history.pushState(null, '', '#');
+            }
+
+            toggleControls() {
+                this.state.controlsOpen = !this.state.controlsOpen;
+                document.getElementById('controlPanel').classList.toggle('open', this.state.controlsOpen);
+            }
+
+            toggleAnimation() {
+                this.state.isPlaying = !this.state.isPlaying;
+                const icon = document.getElementById('playPauseIcon');
+                const text = document.getElementById('playPauseText');
+                
+                if (this.state.isPlaying) {
+                    icon.className = 'ph-pause';
+                    text.textContent = 'Pause';
+                } else {
+                    icon.className = 'ph-play';
+                    text.textContent = 'Play';
+                }
+            }
+
+            resetSettings() {
+                this.state.settings = {
+                    speed: 1.0,
+                    frequency: 1.0,
+                    amplitude: 1.0
+                };
+                
+                // Update sliders
+                document.getElementById('speedSlider').value = 1.0;
+                document.getElementById('frequencySlider').value = 1.0;
+                document.getElementById('amplitudeSlider').value = 1.0;
+                
+                // Update displays
+                document.getElementById('speedValue').textContent = '1.0';
+                document.getElementById('frequencyValue').textContent = '1.0';
+                document.getElementById('amplitudeValue').textContent = '1.0';
+            }
+
+            getSourcePositions(count, arrangement, width, height) {
+                const positions = [];
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const radius = Math.min(width, height) * 0.3;
+
+                switch (arrangement) {
+                    case 'center':
+                        positions.push({ x: centerX, y: centerY });
+                        break;
+                    case 'horizontal':
+                        if (count === 2) {
+                            // Place two sources closer to center for better pattern
+                            const sep = radius * 0.7;
+                            positions.push({ x: centerX - sep / 2, y: centerY });
+                            positions.push({ x: centerX + sep / 2, y: centerY });
+                        } else {
+                            for (let i = 0; i < count; i++) {
+                                const x = centerX + (i - (count - 1) / 2) * radius;
+                                positions.push({ x, y: centerY });
+                            }
+                        }
+                        break;
+                    case 'triangle':
+                    case 'square':
+                    case 'pentagon':
+                    case 'hexagon':
+                    case 'heptagon':
+                    case 'octagon':
+                        const sides = {
+                            triangle: 3, square: 4, pentagon: 5,
+                            hexagon: 6, heptagon: 7, octagon: 8
+                        }[arrangement];
+                        for (let i = 0; i < sides; i++) {
+                            const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
+                            positions.push({
+                                x: centerX + Math.cos(angle) * radius,
+                                y: centerY + Math.sin(angle) * radius
+                            });
+                        }
+                        break;
+                    case 'random':
+                        // Create a spiral pattern with 5 sources for better performance
+                        const spiralSources = 5;
+                        for (let i = 0; i < spiralSources; i++) {
+                            const angle = (i / spiralSources) * Math.PI * 2;
+                            const spiralRadius = radius * (0.3 + (i / spiralSources) * 0.7);
+                            positions.push({
+                                x: centerX + Math.cos(angle * 2) * spiralRadius,
+                                y: centerY + Math.sin(angle * 2) * spiralRadius
+                            });
+                        }
+                        break;
+                }
+                
+                return positions;
+            }
+
+            renderWaves(ctx, width, height, sources, time, settings, isMain = false) {
+                // Use lower resolution for better performance
+                const resolution = isMain ? 3 : 4;
+                const scaledWidth = Math.floor(width / resolution);
+                const scaledHeight = Math.floor(height / resolution);
+                
+                const imageData = ctx.createImageData(scaledWidth, scaledHeight);
+                const data = imageData.data;
+                
+                // Pre-calculate wave parameters
+                const timeOffset = time * settings.speed * 0.05;
+                const freqScale = settings.frequency * 0.1;
+                
+                for (let y = 0; y < scaledHeight; y++) {
+                    for (let x = 0; x < scaledWidth; x++) {
+                        let totalWave = 0;
+                        const realX = x * resolution;
+                        const realY = y * resolution;
+                        
+                        sources.forEach(source => {
+                            const dx = realX - source.x;
+                            const dy = realY - source.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            const wave = settings.amplitude * Math.sin(
+                                distance * freqScale - timeOffset
+                            );
+                            totalWave += wave;
+                        });
+                        
+                        // Normalize and map to color
+                        const normalized = (totalWave / sources.length + 1) / 2;
+                        const hue = normalized * 360;
+                        const lightness = 50 + normalized * 30;
+                        const saturation = 70;
+                        
+                        const rgb = this.hslToRgb(hue / 360, saturation / 100, lightness / 100);
+                        
+                        const idx = (y * scaledWidth + x) * 4;
+                        data[idx] = rgb[0];
+                        data[idx + 1] = rgb[1];
+                        data[idx + 2] = rgb[2];
+                        data[idx + 3] = 255;
+                    }
+                }
+                
+                // Create temporary canvas for scaling
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = scaledWidth;
+                tempCanvas.height = scaledHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.putImageData(imageData, 0, 0);
+                
+                // Scale up to full size with smoothing
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = isMain ? 'high' : 'medium';
+                ctx.drawImage(tempCanvas, 0, 0, scaledWidth, scaledHeight, 0, 0, width, height);
+            }
+
+            hslToRgb(h, s, l) {
+                let r, g, b;
+
+                if (s === 0) {
+                    r = g = b = l;
+                } else {
+                    const hue2rgb = (p, q, t) => {
+                        if (t < 0) t += 1;
+                        if (t > 1) t -= 1;
+                        if (t < 1/6) return p + (q - p) * 6 * t;
+                        if (t < 1/2) return q;
+                        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                        return p;
+                    };
+
+                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                    const p = 2 * l - q;
+                    r = hue2rgb(p, q, h + 1/3);
+                    g = hue2rgb(p, q, h);
+                    b = hue2rgb(p, q, h - 1/3);
+                }
+
+                return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+            }
+
+            startAnimations() {
+                let lastTime = 0;
+                const frameInterval = 1000 / 24; // 24 FPS for better balance between performance and smoothness
+                
+                const animate = (currentTime) => {
+                    const deltaTime = currentTime - lastTime;
+                    
+                    if (deltaTime >= frameInterval) {
+                        if (this.state.isPlaying) {
+                            this.time += 1;
+                        }
+                        
+                        // Render thumbnails
+                        if (this.state.currentView === 'grid') {
+                            this.thumbnailAnimations.forEach(anim => {
+                                const sources = this.getSourcePositions(
+                                    anim.pattern.sources,
+                                    anim.pattern.arrangement,
+                                    200, 200
+                                );
+                                this.renderWaves(
+                                    anim.ctx, 200, 200, sources, this.time,
+                                    { speed: 1, frequency: 1, amplitude: 1 }
+                                );
+                            });
+                        }
+                        
+                        // Render main canvas
+                        if (this.state.currentView === 'fullscreen' && this.state.selectedPattern) {
+                            const pattern = this.patterns[this.state.selectedPattern - 1];
+                            const sources = this.getSourcePositions(
+                                pattern.sources,
+                                pattern.arrangement,
+                                this.mainCanvas.width,
+                                this.mainCanvas.height
+                            );
+                            this.renderWaves(
+                                this.mainCtx,
+                                this.mainCanvas.width,
+                                this.mainCanvas.height,
+                                sources,
+                                this.time,
+                                this.state.settings,
+                                true
+                            );
+                        }
+                        
+                        lastTime = currentTime;
+                    }
+                    
+                    requestAnimationFrame(animate);
+                };
+                
+                animate(0);
+            }
+
+            // About page logic
+            showAboutPage() {
+                document.getElementById('aboutPage').classList.add('active');
+                document.getElementById('mainTitle').style.opacity = '0';
+                document.getElementById('gridContainer').classList.add('hidden');
+                document.getElementById('fullscreenView').classList.remove('active');
+                document.getElementById('footer').classList.add('hidden');
+            }
+
+            hideAboutPage() {
+                document.getElementById('aboutPage').classList.remove('active');
+                document.getElementById('mainTitle').style.opacity = '0.95';
+                document.getElementById('gridContainer').classList.remove('hidden');
+                document.getElementById('footer').classList.remove('hidden');
+            }
+        }
+
+        // Initialize app
+        const app = new WaveInterferenceToy();
+    </script>
+</body>
+</html>
